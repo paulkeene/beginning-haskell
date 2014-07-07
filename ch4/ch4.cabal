@@ -18,10 +18,9 @@ cabal-version:       >=1.10
 
 executable ch4
   main-is:             Main.hs
-  -- other-modules:
+  other-modules:       Chapter4
   -- other-extensions:
   build-depends:       base >=4.6 && <4.7,
---                       containers >= 0.5.5.1 && < 0.6,
                        containers,
                        persistent >= 1.3.1.1 && < 1.4
   -- hs-source-dirs:

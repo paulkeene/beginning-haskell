@@ -1,6 +1,8 @@
 {-# LANGUAGE LambdaCase #-}
 module Chapter3 where
+
 import Data.List (find)
+
 
 -- Section 3-1 --
 
