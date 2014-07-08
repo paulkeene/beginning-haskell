@@ -21,12 +21,12 @@ myAdjust f = M.alter (fmap f)
 data Gender = Male | Female | Unknown
             deriving (Show, Eq, Ord)
 data Person = Person String String Gender
-            deriving (Show, Ord, Eq)
+            deriving (Show, Ord)
 data Client i = GovOrg { clientId :: i, clientName :: String }
               | Company { clientId :: i, clientName :: String,
                           person :: Person, duty :: String }
               | Individual { clientId :: i, person :: Person }
-              deriving (Show, Ord, Eq)
+              deriving (Show, Ord)
 
 data ClientKind = GovOrgKind | CompanyKind | IndividualKind
                 deriving (Show, Ord, Eq)
@@ -70,3 +70,18 @@ instance Priceable MaintenanceTools where
 
 totalPrice :: Priceable p => [p] -> Double
 totalPrice = foldr ((+) . price) 0.0
+
+
+-- Exercise 4-5
+
+instance Eq Person where
+  (Person f1 l1 g1) == (Person f2 l2 g2) = (f1 == f2) && (l1 == l2) &&
+                                           (g1 == g2)
+
+instance Eq i => Eq (Client i) where
+  (GovOrg id1 name1) == (GovOrg id2 name2) = (id1 == id2) && (name1 == name2)
+  (Company id1 name1 p1 d1) == (Company id2 name2 p2 d2) = isEqual
+    where
+      isEqual = (id1 == id2) && (name1 == name2) && (p1 == p2) && (d1 == d2)
+  (Individual id1 p1) == (Individual id2 p2) = (id1 == id2) && (p1 == p2)
+  _ == _ = False
