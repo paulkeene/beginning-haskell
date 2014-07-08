@@ -52,3 +52,21 @@ classifyClients' cs = M.fromList [(GovOrgKind, S.fromList govOrgs),
     govOrgs = filter (f GovOrgKind) cs
     companies = filter (f CompanyKind) cs
     individuals = filter (f IndividualKind) cs 
+
+
+-- Exercise 4-4
+
+class Priceable p where
+  price :: p -> Double
+
+data TravelGuide = TravelGuide String Double deriving Show
+data MaintenanceTools = MaintenanceTools String Double deriving Show
+
+instance Priceable TravelGuide where
+  price (TravelGuide _ p) = p
+
+instance Priceable MaintenanceTools where
+  price (MaintenanceTools _ p) = p
+
+totalPrice :: Priceable p => [p] -> Double
+totalPrice = foldr ((+) . price) 0.0
