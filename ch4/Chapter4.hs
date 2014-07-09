@@ -61,11 +61,12 @@ classifyClients' cs = M.fromList [(GovOrgKind, S.fromList govOrgs),
 class Priceable p where
   price :: p -> Double
 
-data TravelGuide = TravelGuide String Double deriving Show
+data TravelGuide = TravelGuide { title :: String, authors :: [String],
+                                 cost :: Double } deriving Show
 data MaintenanceTools = MaintenanceTools String Double deriving Show
 
 instance Priceable TravelGuide where
-  price (TravelGuide _ p) = p
+  price TravelGuide { cost = c } = c
 
 instance Priceable MaintenanceTools where
   price (MaintenanceTools _ p) = p
@@ -111,3 +112,22 @@ instance Ord i => Ord (Client i) where
           idOrd = (compare `on` clientId) c1' c2'
           dutyOrd = (compare `on` duty) c1' c2'
       finalOrd c1'@(GovOrg {}) c2'@(GovOrg {}) = (compare `on` clientId) c1' c2'
+
+
+-- Exercise 4-7
+
+data BinaryTree a = Node a (BinaryTree a) (BinaryTree a)
+                  | Leaf
+                  deriving Show
+
+treeInsert :: Ord a => a -> BinaryTree a -> BinaryTree a
+treeInsert v Leaf = Node v Leaf Leaf
+treeInsert v n@(Node v' l r) = case compare v v' of
+                                 EQ -> n
+                                 LT -> Node v' (treeInsert v l) r
+                                 GT -> Node v' l (treeInsert v r)
+
+treeConcat :: Ord a => BinaryTree a -> BinaryTree a -> BinaryTree a
+treeConcat Leaf t2 = t2
+treeConcat t1 Leaf = t1
+treeConcat t1 n@(Node v l r) = treeConcat (treeConcat (treeInsert v t1) l) r
