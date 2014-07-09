@@ -1,3 +1,4 @@
+{-# LANGUAGE InstanceSigs #-}
 module Chapter4 where
 
 import           Data.Function as F (on)
@@ -131,3 +132,26 @@ treeConcat :: Ord a => BinaryTree a -> BinaryTree a -> BinaryTree a
 treeConcat Leaf t2 = t2
 treeConcat t1 Leaf = t1
 treeConcat t1 n@(Node v l r) = treeConcat (treeConcat (treeInsert v t1) l) r
+
+
+-- Exercise 4-8
+
+newtype MyMaybe a = MyMaybe (Maybe a) deriving Show
+
+instance Functor MyMaybe where
+  fmap _ (MyMaybe Nothing) = MyMaybe Nothing
+  fmap f (MyMaybe (Just x)) = MyMaybe . Just $ f x
+
+-- Unfortunately we can't make BinaryTree an instance of Functor in its current
+-- state. Although BinaryTree does not have a constraint on its type (since in
+-- the Haskell community the convention is to never do this) it really should
+-- only hold Ord-erable data. We have no way to enforce that the transformation
+-- function passed to fmap will output a type that is orderable, which means
+-- that we can't use any of the functions we defined for BinaryTree since
+-- they all specify the Ord class constraint. Basically the author needs to
+-- fix this example / exercise.
+
+--instance Functor BinaryTree where
+--  fmap :: Ord b => (a -> b) -> BinaryTree a -> BinaryTree b
+--  fmap _ Leaf = Leaf
+--  fmap f n@(Node v l r) = treeConcat (fmap f r) $ treeInsert (f v) (fmap f l)
