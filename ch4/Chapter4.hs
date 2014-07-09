@@ -1,6 +1,8 @@
 module Chapter4 where
 
+import           Data.Function as F (on)
 import qualified Data.Map as M
+import           Data.Monoid ((<>), mconcat)
 import qualified Data.Set as S
 
 
@@ -26,9 +28,9 @@ data Client i = GovOrg { clientId :: i, clientName :: String }
               | Company { clientId :: i, clientName :: String,
                           person :: Person, duty :: String }
               | Individual { clientId :: i, person :: Person }
-              deriving (Show, Ord)
+              deriving Show
 
-data ClientKind = GovOrgKind | CompanyKind | IndividualKind
+data ClientKind = IndividualKind | CompanyKind | GovOrgKind
                 deriving (Show, Ord, Eq)
 
 getClientKind :: Client a -> ClientKind
@@ -85,3 +87,27 @@ instance Eq i => Eq (Client i) where
       isEqual = (id1 == id2) && (name1 == name2) && (p1 == p2) && (d1 == d2)
   (Individual id1 p1) == (Individual id2 p2) = (id1 == id2) && (p1 == p2)
   _ == _ = False
+
+
+-- Exercise 4-6
+
+getClientName :: Client i -> String
+getClientName GovOrg { clientName = name } = name
+getClientName Company { clientName = name } = name
+getClientName Individual { person = (Person first _ _) } = first
+
+instance Ord i => Ord (Client i) where
+  compare c1 c2 = nameOrd <> kindOrd <> finalOrd c1 c2
+    where
+      nameOrd = (compare `on` getClientName) c1 c2
+      kindOrd = (compare `on` getClientKind) c1 c2
+      finalOrd c1'@(Individual {}) c2'@(Individual {}) = personOrd <> idOrd
+        where
+          personOrd = (compare `on` person) c1' c2'
+          idOrd = (compare `on` clientId) c1' c2'
+      finalOrd c1'@(Company {}) c2'@(Company {}) = personOrd <> dutyOrd <> idOrd
+        where
+          personOrd = (compare `on` person) c1' c2'
+          idOrd = (compare `on` clientId) c1' c2'
+          dutyOrd = (compare `on` duty) c1' c2'
+      finalOrd c1'@(GovOrg {}) c2'@(GovOrg {}) = (compare `on` clientId) c1' c2'
