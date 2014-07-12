@@ -1,9 +1,10 @@
 {-# LANGUAGE InstanceSigs #-}
 module Chapter4 where
 
+import qualified Data.Foldable as Fo (Foldable, foldMap, foldr)
 import           Data.Function as F (on)
 import qualified Data.Map as M
-import           Data.Monoid ((<>), mconcat)
+import           Data.Monoid ((<>), mconcat, mempty)
 import qualified Data.Set as S
 
 
@@ -155,3 +156,35 @@ instance Functor MyMaybe where
 --  fmap :: Ord b => (a -> b) -> BinaryTree a -> BinaryTree b
 --  fmap _ Leaf = Leaf
 --  fmap f n@(Node v l r) = treeConcat (fmap f r) $ treeInsert (f v) (fmap f l)
+
+
+-- Exercise 4-9
+
+newtype FoldableMaybe a = FoldableMaybe (Maybe a) deriving Show
+
+instance Fo.Foldable FoldableMaybe where
+  foldMap _ (FoldableMaybe Nothing) = mempty
+  foldMap f (FoldableMaybe (Just a)) = f a
+
+newtype AltFoldableMaybe a = AltFoldableMaybe (Maybe a) deriving Show
+
+instance Fo.Foldable AltFoldableMaybe where
+  foldr _ b (AltFoldableMaybe Nothing) = b
+  foldr f b (AltFoldableMaybe (Just a)) = f a b
+
+-- Not quite sure if these instances are lazy enough. There might be a better
+-- way to do this. Another thing to note: these two implementations are not
+-- equivalent with non-commutative functions.
+instance Fo.Foldable BinaryTree where
+  foldMap _ Leaf = mempty
+  foldMap f (Node a t1 t2) = f a <> Fo.foldMap f t1 <> Fo.foldMap f t2
+
+newtype AltFoldableBinaryTree a =  AltFoldableBinaryTree (BinaryTree a) 
+                                deriving Show
+
+instance Fo.Foldable AltFoldableBinaryTree where
+  foldr _ b (AltFoldableBinaryTree Leaf) = b
+  foldr f b (AltFoldableBinaryTree (Node a t1 t2)) = Fo.foldr f b'' t2
+    where
+      b' = f a b
+      b'' = Fo.foldr f b' t1
