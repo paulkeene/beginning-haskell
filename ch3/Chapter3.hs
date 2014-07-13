@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Chapter3 where
 
 import Data.List (find)
@@ -147,12 +148,10 @@ minimumBy f (x:xs)
   where
     minRemainder = minimumBy f xs
 
-minimumBy' :: Ord b => (a -> b) -> [a] -> a
+minimumBy' :: forall a b . Ord b => (a -> b) -> [a] -> a
 minimumBy' g = foldr1 f
   where
--- For some reason adding the type signature to this scoped function results in 
--- a compiler error. Enabling ScopedTypeVariables didn't help.
---    f :: a -> a -> a
+    f :: a -> a -> a
     f a1 a2
       | g a1 <= g a2 = a1
       | otherwise = a2
