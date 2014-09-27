@@ -40,7 +40,7 @@ newCentroidPhase :: (Vector v, Vectorizable e v) => M.Map v [e] -> [(v, v)]
 newCentroidPhase = M.toList . fmap (centroid . map toVector)
 
 shouldStop :: (Vector v) => [(v, v)] -> Double -> Bool
-shouldStop vs t = foldr (\(v1, v2) a -> distance v1 v2 + a) 0 vs < t
+shouldStop centroids t = foldr (\(c, c') a -> distance c c' + a) 0 centroids < t
 
 kmeans :: (Vector v, Vectorizable e v, Ord v)
             => (Int -> [e] -> [v]) -- initialization f
@@ -48,16 +48,16 @@ kmeans :: (Vector v, Vectorizable e v, Ord v)
             -> [e]                 -- data
             -> Double              -- threshold
             -> [v]                 -- final centroids
-kmeans f c es = kmeans' (f c es) es
+kmeans f c es = kmeans' initialCentroids es
   where
     initialCentroids = f c es
-    
+
 kmeans' :: (Vector v, Vectorizable e v, Ord v) => [v] -> [e] -> Double -> [v]
-kmeans' vs es t
+kmeans' centroids es t
   | shouldStop oldNewCentroids t = newCentroids
   | otherwise = kmeans' newCentroids es t
   where
-    clusters = clusterAssignmentPhase vs es
+    clusters = clusterAssignmentPhase centroids es
     oldNewCentroids = newCentroidPhase clusters
     newCentroids = map snd oldNewCentroids
 
@@ -74,7 +74,7 @@ kmeansWithCount :: (Vector v, Vectorizable e v, Ord v)
                      -> [e]                 -- data
                      -> Double              -- threshold
                      -> ([v], Int)          -- final centroids, # iterations
-kmeansWithCount f c es t = kmeansWithCount' (f c es) es t 0
+kmeansWithCount f c es t = kmeansWithCount' initialCentroids es t 0
   where
     initialCentroids = f c es
 
