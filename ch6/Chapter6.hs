@@ -1,7 +1,9 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Chapter6 where
 
+import           Control.Lens
 import qualified Data.Foldable as F
 import           Data.List
 import qualified Data.Map as M
@@ -99,3 +101,19 @@ testResult :: ([(Double, Double)], Int)
 testResult = kmeansWithCount initializeSimple 2 testData 0.001
 
 main = print testResult
+
+
+-- Exercise 6-2
+data TimeTravelCapability = Past | Future | Both
+                          deriving Show
+data TimeMachine = TimeMachine { _manufacturer :: String
+                               , _model :: Integer
+                               , _name :: String
+                               , _timeTravelCapability :: TimeTravelCapability
+                               , _price :: Float }
+                 deriving Show
+
+makeLenses ''TimeMachine
+
+updatePrice :: [TimeMachine] -> Float -> [TimeMachine]
+updatePrice ts percent = map (\t -> t & price *~ (1.0 + percent / 100.0)) ts
