@@ -31,7 +31,7 @@ clusterAssignmentPhase :: (Vector v, Vectorizable e v, Ord v) => [v]
                                                               -> M.Map v [e]
 clusterAssignmentPhase centroids = foldr assignCluster initialMap
   where
-    assignCluster  e = M.adjust (++ [e]) $ closestCentroid e
+    assignCluster e = M.adjust (++ [e]) $ closestCentroid e
     closestCentroid e' = minimumBy f centroids
       where
         f c1 c2 = compare (distance v c1) (distance v c2)
@@ -100,8 +100,6 @@ testData = [(1.0,1.0),(1.0,2.0),(4.0,4.0),(4.0,5.0)]
 testResult :: ([(Double, Double)], Int)
 testResult = kmeansWithCount initializeSimple 2 testData 0.001
 
-main = print testResult
-
 
 -- Exercise 6-2
 data TimeTravelCapability = Past | Future | Both
@@ -117,3 +115,44 @@ makeLenses ''TimeMachine
 
 updatePrice :: [TimeMachine] -> Float -> [TimeMachine]
 updatePrice ts percent = map (\t -> t & price *~ (1.0 + percent / 100.0)) ts
+
+
+-- Exercise 6-3
+
+data KMeansState e v = KMeansState { _centroids :: [v]
+                                   , _points :: [e]
+                                   , _err :: Double
+                                   , _threshold :: Double
+                                   , _steps :: Int }
+                       deriving Show
+
+makeLenses ''KMeansState
+
+initializeState :: (Int -> [e] -> [v]) -> Int -> [e] -> Double -> KMeansState e v
+initializeState i n pts t = KMeansState (i n pts) pts (1.0 / 0.0) t 0
+
+kMeans :: (Vector v, Vectorizable e v, Ord v) => (Int -> [e] -> [v]) -> Int -> [e]
+                                          -> Double -> [v]
+kMeans i n pts t = view centroids $ kMeans' (initializeState i n pts t)
+
+kMeans' :: (Vector v, Vectorizable e v, Ord v) => KMeansState e v -> KMeansState e v
+kMeans' state =
+  let assignments = clusterAssignments state
+      state1 = state & centroids.traversed
+                     %~ (\c -> centroid $ fmap toVector $ M.findWithDefault []
+                               c assignments)
+      state2 = state1 & err .~ sum (zipWith distance (state ^. centroids)
+                                    (state1 ^. centroids))
+      state3 = state2 & steps +~ 1
+  in if state3 ^. err < state3 ^. threshold then state3 else kMeans' state3
+
+clusterAssignments :: (Vector v, Vectorizable e v, Ord v) => KMeansState e v ->
+                                                             M.Map v [e]
+clusterAssignments state = foldr assignCluster initialMap (state ^. points)
+  where
+    assignCluster e = M.adjust (++ [e]) $ closestCentroid e
+    closestCentroid e' = minimumBy f (state ^. centroids)
+      where
+        f c1 c2 = compare (distance v c1) (distance v c2)
+        v = toVector e'
+    initialMap = M.fromList $ zip (state ^. centroids) (repeat [])
